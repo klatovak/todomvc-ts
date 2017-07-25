@@ -31,6 +31,12 @@ export class TodoItem extends React.Component<TodoItemProps, State> {
     };
   }
   
+  componentDidUpdate() {
+    if(this.props.todoItem.id === this.props.editId) {
+      this.todoInput.focus();
+    }
+  }
+
   onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.props.handleOnCheck(this.props.todoItem.id, e.currentTarget.checked);
   };
@@ -76,8 +82,16 @@ export class TodoItem extends React.Component<TodoItemProps, State> {
   }
 
   render() {
+    const liClasses = [];
+    if (this.props.todoItem.id === this.props.editId) {
+      liClasses.push('editing');
+    }
+    if (this.props.todoItem.completed) {
+      liClasses.push('completed');
+    }
+
     return (
-      <li className={this.props.todoItem.id === this.props.editId ? 'editing' : ''}>
+      <li className={liClasses.join(' ')}>
         <div className="view">
           <input 
             type="checkbox" 
