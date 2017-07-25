@@ -9,6 +9,9 @@
     "target": "es6",
     "module": "es2015",
 
+    "jsx": "react",
+    "rootDir": "src",
+
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
