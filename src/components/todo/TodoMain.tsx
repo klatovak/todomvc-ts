@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { ToggleCheckboxes } from '../../utils/ToggleCheckboxes';
+import { ToggleCheckboxes } from '../global/ToggleCheckboxes';
 import { TodoList } from './TodoList';
 import { TodoType } from './TodoItem';
 
