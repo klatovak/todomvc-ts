@@ -1,10 +1,10 @@
 import * as React from 'react';
-// import { BrowserRouter as Router, Route, Link } from 'react-router-dom'
+import { match } from 'react-router-dom';
 
-import { TodoHeader } from './TodoHeader';
-import { TodoMain } from './TodoMain';
-import { TodoType } from './TodoItem';
-import { TodoFooter} from './TodoFooter';
+import { TodoHeader } from './todo/TodoHeader';
+import { TodoMain } from './todo/TodoMain';
+import { TodoType } from './todo/TodoItem';
+import { TodoFooter} from './todo/TodoFooter';
 
 export interface State {
   currentId: number;
@@ -13,22 +13,38 @@ export interface State {
   todoItems: TodoType[];
 }
 
-export class Todo extends React.Component<{}, State> {
-  constructor() {
-    super();
+export interface AppProps {
+  match?: match<{filter: string}>;
+}
+
+export class App extends React.Component<AppProps, State> {
+  constructor(props: AppProps) {
+    super(props);
+
+    const filter = typeof props.match !== 'undefined' && typeof props.match.params.filter !== 'undefined' 
+      ? props.match.params.filter 
+      : 'all';
 
     this.state = {
       currentId: 0,
       editId: 0,
       toggleAll: false,
-      todoItems: this.getTodoItems(),
+      todoItems: this.getTodoItems(filter),
     };
   }
 
-  getTodoItems(): TodoType[] {
-    const todoItems = localStorage.getItem('todoItems');
-    if (todoItems !== null) {
-      return JSON.parse(todoItems);
+  getTodoItems(filter: string): TodoType[] {
+    const todoItemString = localStorage.getItem('todoItems');
+    if (todoItemString !== null) {
+      const todoItems = JSON.parse(todoItemString) as TodoType[];
+      if (filter === 'active') {
+        return todoItems.filter(todoItem => todoItem.completed === false);
+      } else if (filter ===  'completed') {
+        return todoItems.filter(todoItem => todoItem.completed === true);
+      } else {
+        return todoItems;
+      }
+
     } else {
       return [];
     }

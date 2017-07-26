@@ -1,17 +1,22 @@
 import * as React from 'react';
+import { HashRouter, Link } from 'react-router-dom';
 
 export const TodoFilter: React.StatelessComponent = () => {
   return (
-    <ul className="filters">
-      <li>
-        <a className="selected" href="#/">All</a>
-      </li>
-      <li>
-        <a href="#/active">Active</a>
-      </li>
-      <li>
-        <a href="#/completed">Completed</a>
-      </li>
-    </ul>
+    <HashRouter>
+      <div>
+        <ul className="filters">
+          <li>
+            <Link to="/" replace>All</Link>
+          </li>
+          <li>
+            <Link to="/active" replace>Active</Link>
+          </li>
+          <li>
+            <Link to="/completed" replace>Completed</Link>
+          </li>
+        </ul>
+      </div>
+    </HashRouter>
   );
 };
