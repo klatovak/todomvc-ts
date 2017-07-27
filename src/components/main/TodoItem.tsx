@@ -37,19 +37,27 @@ export class TodoItem extends React.Component<TodoItemProps, State> {
     }
   }
 
-  onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    this.props.handleOnCheck(this.props.todoItem.id, e.currentTarget.checked);
+  handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const className = e.currentTarget.className;
+    
+    if (className === 'toggle') {
+      this.props.handleOnCheck(this.props.todoItem.id, e.currentTarget.checked);
+    } else if(className === 'edit') {
+      this.setState({
+        todoInput: e.currentTarget.value,
+      });
+    }
   };
 
-  onDoubleClick = () => {
+  handleOnDoubleClick = () => {
     this.props.handleOnDoubleClick(this.props.todoItem.id);
   };
 
-  onClick = () => {
+  handleOnClick = () => {
     this.props.handleOnRemove(this.props.todoItem.id);
   };
 
-  onKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  handleOnKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       this.update();
     } else if (e.key === 'Escape') {
@@ -61,24 +69,18 @@ export class TodoItem extends React.Component<TodoItemProps, State> {
     }
   }
 
-  onBlur = () => {
+  handleOnBlur = () => {
     this.update();
   }
 
   update = () => {
     const updatedTodo = this.state.todoInput.trim();
-    console.log(updatedTodo);
+
     if (updatedTodo === '') {
       this.props.handleOnRemove(this.props.todoItem.id);
     } else {
       this.props.handleOnUpdate(this.props.todoItem.id, updatedTodo);
     }
-  }
-
-  handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({
-      todoInput: e.currentTarget.value,
-    });
   }
 
   render() {
@@ -97,20 +99,20 @@ export class TodoItem extends React.Component<TodoItemProps, State> {
             type="checkbox" 
             className="toggle"
             checked={this.props.todoItem.completed ? true : false} 
-            onChange={this.onChange} 
+            onChange={this.handleOnChange} 
           />
-          <label onDoubleClick={this.onDoubleClick}>{this.props.todoItem.title}</label>
+          <label onDoubleClick={this.handleOnDoubleClick}>{this.props.todoItem.title}</label>
           <button 
             className="destroy"
-            onClick={this.onClick}
+            onClick={this.handleOnClick}
           />
         </div>
         <input 
           className="edit" 
           value={this.state.todoInput}
           onChange={this.handleOnChange}
-          onKeyUp={this.onKeyUp}
-          onBlur={this.onBlur}
+          onKeyUp={this.handleOnKeyUp}
+          onBlur={this.handleOnBlur}
           ref={(input) => { this.todoInput = input as HTMLInputElement; }}
           placeholder="What needs to be done?"
         />

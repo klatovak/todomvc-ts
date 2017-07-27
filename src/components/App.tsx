@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { match } from 'react-router-dom';
 
-import { TodoHeader } from './todo/TodoHeader';
-import { TodoMain } from './todo/TodoMain';
-import { TodoType } from './todo/TodoItem';
-import { TodoFooter} from './todo/TodoFooter';
+import { TodoHeader } from './header/TodoHeader';
+import { TodoMain } from './main/TodoMain';
+import { TodoType } from './main/TodoItem';
+import { TodoFooter} from './footer/TodoFooter';
 
 export interface State {
   currentId: number;
@@ -17,93 +17,99 @@ export interface AppProps {
   match?: match<{filter: string}>;
 }
 
-export class App extends React.Component<AppProps, State> {
+export class App extends React.Component<AppProps, State> {  
+  
   constructor(props: AppProps) {
     super(props);
 
-    const filter = typeof props.match !== 'undefined' && typeof props.match.params.filter !== 'undefined' 
-      ? props.match.params.filter 
-      : 'all';
+    const active = this.todoItems.filter(todoItem => !todoItem.completed)
 
     this.state = {
-      currentId: 0,
+      currentId: this.currentId,
       editId: 0,
-      toggleAll: false,
-      todoItems: this.getTodoItems(filter),
+      toggleAll: active.length === 0 ? true : false,
+      todoItems: this.getFilteredItems(),
     };
   }
 
-  getTodoItems(filter: string): TodoType[] {
-    const todoItemString = localStorage.getItem('todoItems');
-    if (todoItemString !== null) {
-      const todoItems = JSON.parse(todoItemString) as TodoType[];
-      if (filter === 'active') {
-        return todoItems.filter(todoItem => todoItem.completed === false);
-      } else if (filter ===  'completed') {
-        return todoItems.filter(todoItem => todoItem.completed === true);
-      } else {
-        return todoItems;
-      }
+  componentWillReceiveProps(nextProps: AppProps) {
+    const filter = this.getFilter(nextProps);
 
+    this.setState({
+      todoItems: this.getFilteredItems(filter),
+    });
+  }
+
+  getFilteredItems(filter?: string): TodoType[] {
+    const todoItems = this.todoItems;
+    if (typeof filter === 'undefined') {
+      filter = this.getFilter(this.props);
+    }
+
+    if (filter === 'active') {
+      return todoItems.filter(todoItem => todoItem.completed === false);
+    } else if (filter ===  'completed') {
+      return todoItems.filter(todoItem => todoItem.completed === true);
     } else {
-      return [];
+      return todoItems;
     }
   }
 
-  setTodoItems(todoItems: TodoType[]): void {
-    localStorage.setItem('todoItems', JSON.stringify(todoItems));
+  getFilter(props: AppProps) {
+    return typeof props.match !== 'undefined' && typeof props.match.params.filter !== 'undefined' 
+      ? props.match.params.filter 
+      : 'all';
   }
 
   handleOnToggle = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const checked = e.currentTarget.checked;
     
-    const todoItems = this.state.todoItems.map(todoItem => {
-      todoItem.completed = checked;
-      return todoItem;
-    });
-    
+    this.todoItems = this.getFilteredItems('all')
+      .map(todoItem => {
+        todoItem.completed = checked;
+        return todoItem;
+      });
+
     this.setState({
       toggleAll: checked,
-      todoItems,
+      todoItems: this.getFilteredItems(),
     });
-
-    this.setTodoItems(todoItems);
   }
 
   handleOnCheck = (todoItemId: number, checked: boolean): void => {
-    const todoItems = this.state.todoItems.slice();
+    const todoItems = this.todoItems;
     
     const index = todoItems.findIndex(todoItem => todoItem.id === todoItemId);
     todoItems[index].completed = checked;
+    
+    this.todoItems = todoItems;
 
-    const completed = todoItems.filter(todoItem => !todoItem.completed);
+    const active = todoItems.filter(todoItem => !todoItem.completed);
 
     this.setState({
-      toggleAll: completed.length === 0 ? true : false,
-      todoItems,
+      toggleAll: active.length === 0 ? true : false,
+      todoItems: this.getFilteredItems(),
     });
-
-    this.setTodoItems(todoItems);
   }
 
-  handleOnDoubleClick = (todoId: number): void => {
+  handleOnDoubleClick = (editId: number): void => {
     this.setState({
-      editId: todoId,
+      editId,
     });
   }
 
   handleOnUpdate = (todoId: number, todo: string): void => {
-    const todoItems = this.state.todoItems.slice();
+    const todoItems = this.todoItems;
       
-    const index = this.state.todoItems.findIndex(todoItem => todoItem.id === todoId);
+    const index = todoItems.findIndex(todoItem => todoItem.id === todoId);
     todoItems[index].title = todo;
+
+    this.todoItems = todoItems;
 
     this.setState({
       editId: 0,
-      todoItems, 
+      todoItems: this.getFilteredItems(), 
     });
-
-    this.setTodoItems(todoItems);
   }
 
   handleOnCancel = (): void => {
@@ -113,23 +119,24 @@ export class App extends React.Component<AppProps, State> {
   }
 
   handleOnRemove = (todoId: number): void => {
-    const todoItems = this.state.todoItems.slice();
+    const todoItems = this.todoItems;
       
-    const index = this.state.todoItems.findIndex(todoItem => todoItem.id === todoId);
+    const index = todoItems.findIndex(todoItem => todoItem.id === todoId);
     todoItems.splice(index, 1);
 
+    this.todoItems = todoItems;
+  
     this.setState({
       editId: 0,
-      todoItems, 
+      todoItems: this.getFilteredItems(), 
     });
-
-    this.setTodoItems(todoItems);
   }
 
   handleOnEnter = (todo: string): void => {
     if (todo !== '') {
-      const todoItems = this.state.todoItems.slice();
-      const nextId = this.state.currentId + 1;
+      // Get from local storage since we this.state may have filtered todos.
+      const todoItems = this.todoItems;
+      const nextId = this.currentId += 1;
 
       todoItems.push({
         id: nextId,
@@ -137,32 +144,36 @@ export class App extends React.Component<AppProps, State> {
         completed: false,
       });
 
+      this.todoItems = todoItems;
+
       this.setState({
         currentId: nextId,
-        todoItems, 
+        todoItems: this.getFilteredItems(), 
       });
-
-      this.setTodoItems(todoItems);
     }
   }
 
   handleOnClear = (): void => {
-    const todoItems = this.state.todoItems
-      .slice()
+    const todoItems = this.todoItems
       .filter(todoItem => !todoItem.completed);
+
+    this.todoItems = todoItems;
 
     this.setState({
       toggleAll: false,
-      todoItems,
+      todoItems: this.getFilteredItems(),
     });
-
-    this.setTodoItems(todoItems);
   }
   
   render() {
-    return (
-      <div className="todo">
-        <TodoHeader handleOnEnter={this.handleOnEnter} />
+    const todoCount = this.todoItems.length;
+    const filter = this.getFilter(this.props);
+    
+    let main = null;
+    let footer = null;
+    
+    if (todoCount) {
+      main = (
         <TodoMain 
           toggleAll={this.state.toggleAll} 
           todoItems={this.state.todoItems} 
@@ -174,8 +185,43 @@ export class App extends React.Component<AppProps, State> {
           handleOnCancel={this.handleOnCancel}
           handleOnRemove={this.handleOnRemove}
         />
-        <TodoFooter count={this.state.todoItems.length} handleOnClear={this.handleOnClear} />
+      );
+      footer = (
+        <TodoFooter 
+          count={todoCount} 
+          active={filter}
+          handleOnClear={this.handleOnClear} 
+        />
+      );
+    }
+    
+    return (
+      <div className="todo">
+        <TodoHeader handleOnEnter={this.handleOnEnter} />
+        {main}
+        {footer}
       </div>
     );
+  }
+
+  // Getters and setters. May be overkill but wanted to practice this a bit.
+  get currentId() {
+    const currentId = localStorage.getItem('currentId');
+    return currentId === null ? 0 : +currentId;
+  }
+
+  set currentId(currentId) {
+    localStorage.setItem('currentId', '' + currentId);
+  }
+
+  get todoItems() {
+    const todoItems = localStorage.getItem('todoItems');
+    return (todoItems !== null ? JSON.parse(todoItems) : []) as TodoType[];
+  }
+
+  set todoItems(todoItems) {
+    if(todoItems !== null) {
+      localStorage.setItem('todoItems', JSON.stringify(todoItems));
+    }
   }
 }
