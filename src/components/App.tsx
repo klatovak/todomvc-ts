@@ -22,7 +22,7 @@ export class App extends React.Component<AppProps, State> {
   constructor(props: AppProps) {
     super(props);
 
-    const active = this.todoItems.filter(todoItem => !todoItem.completed)
+    const active = this.todoItems.filter(todoItem => !todoItem.completed);
 
     this.state = {
       currentId: this.currentId,
@@ -169,13 +169,14 @@ export class App extends React.Component<AppProps, State> {
   }
   
   render() {
-    const todoCount = this.todoItems.length;
+    const todoItems = this.todoItems
+    const active = todoItems.filter(todoItem => !todoItem.completed);
     const filter = this.getFilter();
     
     let main = null;
     let footer = null;
     
-    if (todoCount) {
+    if (todoItems.length > 0) {
       main = (
         <TodoMain 
           toggleAll={this.state.toggleAll} 
@@ -191,7 +192,7 @@ export class App extends React.Component<AppProps, State> {
       );
       footer = (
         <TodoFooter 
-          count={todoCount} 
+          count={active.length} 
           active={filter}
           handleOnClear={this.handleOnClear} 
         />
