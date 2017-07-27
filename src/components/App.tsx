@@ -43,7 +43,7 @@ export class App extends React.Component<AppProps, State> {
   getFilteredItems(filter?: string): TodoType[] {
     const todoItems = this.todoItems;
     if (typeof filter === 'undefined') {
-      filter = this.getFilter(this.props);
+      filter = this.getFilter();
     }
 
     if (filter === 'active') {
@@ -55,7 +55,10 @@ export class App extends React.Component<AppProps, State> {
     }
   }
 
-  getFilter(props: AppProps) {
+  getFilter(props?: AppProps) {
+    if (typeof props === 'undefined') {
+      props = this.props;
+    }
     return typeof props.match !== 'undefined' && typeof props.match.params.filter !== 'undefined' 
       ? props.match.params.filter 
       : 'all';
@@ -167,7 +170,7 @@ export class App extends React.Component<AppProps, State> {
   
   render() {
     const todoCount = this.todoItems.length;
-    const filter = this.getFilter(this.props);
+    const filter = this.getFilter();
     
     let main = null;
     let footer = null;
